@@ -37,7 +37,8 @@ def get_active_application() -> dict:
         return {
             "title": None,
             "process": None,
-            "pid": None
+            "pid": None,
+            "hwnd": None,
         }
 
     length = user32.GetWindowTextLengthW(hwnd)
@@ -71,5 +72,6 @@ def get_active_application() -> dict:
     return {
         "title": title,
         "process": process_name,
-        "pid": pid.value
+        "pid": pid.value,
+        "hwnd": int(hwnd),
     }

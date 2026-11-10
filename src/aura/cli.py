@@ -3,6 +3,12 @@ from aura.config import settings
 from aura.llm import AuraLLM
 from aura.screen import capture_primary_monitor
 from aura.perception.screen_observer import ScreenObserver
+from pprint import pprint
+from aura.perception.context_engine import ContextEngine
+from aura.perception.ui_automation import UIAutomationInspector
+from aura.perception.application_detector import (
+    get_active_application,
+)
 
 def command_doctor():
     print("AURA diagnostics")
@@ -100,6 +106,14 @@ def main():
         type=float,
         default=0.035
     )
+    context_parser = sub.add_parser(
+        "inspect-context",
+        help="Inspect the current application and visible screen text"
+    )
+    ui_parser = sub.add_parser(
+        "inspect-ui",
+        help="Inspect accessible controls in the active window"
+    )
 
     args = parser.parse_args()
     if args.command == "doctor":
@@ -116,6 +130,77 @@ def main():
         )
 
         observer.start()
+    elif args.command == "inspect-context":
+        consent = input(
+            "\nAURA will capture your primary monitor and "
+            "extract visible text locally.\n"
+            "Avoid password fields and private information.\n"
+            "Continue? (y/n): "
+        ).strip().lower()
+
+        if consent != "y":
+            print("Screen inspection cancelled.")
+            return
+
+        engine = ContextEngine()
+
+        try:
+            context = engine.inspect()
+            pprint(context, sort_dicts=False)
+
+        except Exception as error:
+            print(f"Context inspection failed: {error}")
+
+    elif args.command == "inspect-ui":
+        application = get_active_application()
+
+        process_name = (
+            application.get("process") or ""
+        ).lower()
+
+        sensitive_processes = {
+            "1password.exe",
+            "keepass.exe",
+            "keepassxc.exe",
+            "bitwarden.exe",
+            "lastpass.exe",
+            "logonui.exe",
+            "credentialui.exe",
+        }
+
+        if process_name in sensitive_processes:
+            print("Inspection blocked for a sensitive application.")
+            return
+
+        if not application.get("hwnd"):
+            print("No active window was detected.")
+            return
+
+        consent = input(
+            "\nAURA will inspect accessibility metadata "
+            "for the active window.\n"
+            "It will not click or type.\n"
+            "Continue? (y/n): "
+        ).strip().lower()
+
+        if consent != "y":
+            print("UI inspection cancelled.")
+            return
+
+        inspector = UIAutomationInspector()
+
+        try:
+            result = inspector.inspect_window(
+                application["hwnd"]
+            )
+
+            pprint({
+                "application": application,
+                "ui": result,
+            }, sort_dicts=False)
+
+        except Exception as error:
+            print(f"UI inspection failed: {error}")
 
 if __name__ == "__main__":
     main()
