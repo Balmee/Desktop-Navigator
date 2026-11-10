@@ -1,0 +1,1 @@
+"""AURA desktop perception subsystem."""

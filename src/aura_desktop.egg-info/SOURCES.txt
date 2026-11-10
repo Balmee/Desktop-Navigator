@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+src/aura/__init__.py
+src/aura/__main__.py
+src/aura/cli.py
+src/aura/config.py
+src/aura/llm.py
+src/aura/screen.py
+src/aura_desktop.egg-info/PKG-INFO
+src/aura_desktop.egg-info/SOURCES.txt
+src/aura_desktop.egg-info/dependency_links.txt
+src/aura_desktop.egg-info/requires.txt
+src/aura_desktop.egg-info/top_level.txt
+tests/test_screen_module.py
