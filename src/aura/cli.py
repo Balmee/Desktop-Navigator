@@ -9,6 +9,7 @@ from aura.perception.ui_automation import UIAutomationInspector
 from aura.perception.application_detector import (
     get_active_application,
 )
+from aura.perception.adaptive_observer import AdaptiveObserver
 
 def command_doctor():
     print("AURA diagnostics")
@@ -115,6 +116,29 @@ def main():
         help="Inspect accessible controls in the active window"
     )
 
+    watch_parser = sub.add_parser(
+        "watch",
+        help="Start AURA's adaptive desktop observer"
+    )
+
+    watch_parser.add_argument(
+        "--interval",
+        type=float,
+        default=2.0,
+    )
+
+    watch_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.035,
+    )
+
+    watch_parser.add_argument(
+        "--ocr-cooldown",
+        type=float,
+        default=5.0,
+    )
+
     args = parser.parse_args()
     if args.command == "doctor":
         command_doctor()
@@ -201,6 +225,27 @@ def main():
 
         except Exception as error:
             print(f"UI inspection failed: {error}")
+
+    elif args.command == "watch":
+        consent = input(
+            "\nAURA will continuously observe your primary monitor.\n"
+            "Screen text will be processed locally in memory.\n"
+            "Do not use this during sensitive activities.\n"
+            "No screenshots will be saved or sent to an LLM.\n"
+            "Continue? (y/n): "
+        ).strip().lower()
+
+        if consent != "y":
+            print("Adaptive observation cancelled.")
+            return
+
+        observer = AdaptiveObserver(
+            interval=args.interval,
+            threshold=args.threshold,
+            ocr_cooldown=args.ocr_cooldown,
+        )
+
+        observer.start()
 
 if __name__ == "__main__":
     main()
