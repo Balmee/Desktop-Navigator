@@ -139,6 +139,17 @@ def main():
         default=5.0,
     )
 
+    listen_parser = sub.add_parser(
+        "listen",
+        help="Record and transcribe microphone input"
+    )
+
+    listen_parser.add_argument(
+        "--duration",
+        type=float,
+        default=6.0,
+    )
+
     args = parser.parse_args()
     if args.command == "doctor":
         command_doctor()
@@ -246,6 +257,40 @@ def main():
         )
 
         observer.start()
+
+    elif args.command == "listen":
+        consent = input(
+            "\nAURA will record from your microphone.\n"
+            "Audio will be processed locally and not saved.\n"
+            "Continue? (y/n): "
+        ).strip().lower()
+
+        if consent != "y":
+            print("Voice recording cancelled.")
+            return
+
+        try:
+            from aura.voice.voice_interface import VoiceInterface
+
+            voice = VoiceInterface()
+            result = voice.listen(
+                duration=args.duration
+            )
+
+            print("\n" + "=" * 45)
+            print("VOICE RECOGNITION RESULT")
+            print("=" * 45)
+            print("Transcript:", result["text"])
+            print("Language:", result["language"])
+            print(
+                "Confidence:",
+                result["language_probability"],
+            )
+            print("=" * 45)
+
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 if __name__ == "__main__":
     main()
